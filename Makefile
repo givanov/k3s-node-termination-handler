@@ -193,15 +193,6 @@ helm-package: helm-clean
 helm-lint:
 	helm lint $(CHART_PATH)/$(CHART_NAME)
 
-.PHONY: helm-push-init
-helm-push-init:
-	@helm plugin install $(HELM_PLUGIN_PUSH_URL) --version $(HELM_PLUGIN_PUSH_VERSION) || echo "Plugin already installed - nothing to do"
-	@helm repo add $(HELM_REPO_NAME) $(HELM_REPO_URL)
-	@helm repo update
-
-helm-push: helm-push-init
-	@helm push $(CHART_DIST)/$(CHART_NAME)-$(VERSION).tgz $(HELM_REPO_NAME)
-
 .PHONY: semantic-release
 semantic-release:
 	@npm ci
@@ -232,6 +223,7 @@ DOCKERBUILD_CONTEXT = .
 BUILD_DOCKER_ARCHS = $(addprefix common-docker-,$(DOCKER_ARCHS))
 PUBLISH_DOCKER_ARCHS = $(addprefix common-docker-publish-,$(DOCKER_ARCHS))
 TAG_DOCKER_ARCHS = $(addprefix common-docker-tag-latest-,$(DOCKER_ARCHS))
+MANIFEST_AMMEND_ARCHS = $(addprefix common-docker-manifest-set-arch-,$(DOCKER_ARCHS))
 
 .PHONY: common-docker $(BUILD_DOCKER_ARCHS)
 common-docker: $(BUILD_DOCKER_ARCHS)
@@ -255,4 +247,10 @@ $(TAG_DOCKER_ARCHS): common-docker-tag-latest-%:
 .PHONY: common-docker-manifest
 common-docker-manifest:
 	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create -a "$(DOCKER_REPO)/$(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG)" $(foreach ARCH,$(DOCKER_ARCHS),$(DOCKER_REPO)/$(DOCKER_IMAGE_NAME)-linux-$(ARCH):$(DOCKER_IMAGE_TAG))
+	$(MAKE) common-docker-manifest-set-arch
 	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push "$(DOCKER_REPO)/$(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG)"
+
+.PHONY: common-docker-manifest-set-arch $(MANIFEST_AMMEND_ARCHS)
+common-docker-manifest-set-arch: $(MANIFEST_AMMEND_ARCHS)
+$(MANIFEST_AMMEND_ARCHS): common-docker-manifest-set-arch-%:
+	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest annotate --arch $* "$(DOCKER_REPO)/$(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG)" "$(DOCKER_REPO)/$(DOCKER_IMAGE_NAME)-linux-$*:$(DOCKER_IMAGE_TAG)"

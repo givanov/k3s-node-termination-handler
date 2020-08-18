@@ -10,7 +10,7 @@ The usecase this was build for was when nodes die, k3s never removes them and as
 
 Deploy the operator dependencies:
 ```
-kubectl apply -f deploy/service_account.yaml -n k3s-node-termina∂∂∂ion-handler
+kubectl apply -f deploy/service_account.yaml -n k3s-node-termination-handler
 kubectl apply -f deploy/role.yaml -n k3s-node-termination-handler
 kubectl apply -f deploy/role_binding.yaml -n k3s-node-termination-handler
 ```

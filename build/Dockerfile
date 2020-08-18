@@ -13,8 +13,8 @@ RUN make setup
 
 COPY . /operator
 
-ARG OS="linux"
-ARG ARCH="amd64"
+ARG OS
+ARG ARCH
 
 RUN GOOS=${OS} GOARCH=${ARCH} GOARM=7 make build-docker
 

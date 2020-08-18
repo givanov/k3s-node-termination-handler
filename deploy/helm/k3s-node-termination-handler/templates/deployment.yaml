@@ -52,14 +52,7 @@ spec:
             httpGet:
               path: /readyz
               port: http
-{{- if .Values.awsCredentials.create }}
-          envFrom:
-          - secretRef:
-              name: {{ include "k3s-node-termination-handler.credentialsSecretName" . }}
-{{- end }}
           env:
-          - name: AWS_REGION
-            value: {{ required "A valid AWS region is required. Please set .Values.awsCredentials.awsRegion" .Values.awsCredentials.awsRegion }}
           - name: SERVICE_MONITOR_NAMESPACE
             valueFrom:
               fieldRef:

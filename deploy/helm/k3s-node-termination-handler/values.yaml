@@ -15,19 +15,6 @@ fullnameOverride: ""
 podDisruptionBudget:
   minAvailable: 1
 
-awsCredentials:
-  # Region must always be set
-  awsRegion:
-  # Whether to mount the secret in the pod
-  # Set to false if you want to use a different aws auth method e.g. eks iam service account
-  useSecret: true
-  create: false
-  # Annotations to add to the secret
-  annotations: {}
-  secretName:
-  awsAccessKeyId:
-  awsSecretAccessKey:
-
 # Specifies the time after which a node is considered dead and as such deleted
 nodeTerminationGracePeriod: "1m"
 
