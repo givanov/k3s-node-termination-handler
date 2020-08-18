@@ -1,0 +1,20 @@
+{{- if .Values.rbac.create -}}
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ include "k3s-node-termination-handler.rbacRoleBindingName" . }}
+  labels:
+    {{- include "k3s-node-termination-handler.labels" . | nindent 4 }}
+  {{- with .Values.rbac.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+subjects:
+- kind: ServiceAccount
+  namespace: {{ .Release.Namespace }}
+  name: {{ include "k3s-node-termination-handler.serviceAccountName" . }}
+roleRef:
+  kind: ClusterRole
+  name: {{ include "k3s-node-termination-handler.rbacRoleName" . }}
+  apiGroup: rbac.authorization.k8s.io
+{{- end -}}

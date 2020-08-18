@@ -1,0 +1,13 @@
+{{- if .Values.podDisruptionBudget -}}
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ template "k3s-node-termination-handler.fullname" . }}
+  labels:
+    {{- include "k3s-node-termination-handler.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+    {{- include "k3s-node-termination-handler.selectorLabels" . | nindent 6 }}
+{{ toYaml .Values.podDisruptionBudget | indent 2 }}
+{{- end -}}

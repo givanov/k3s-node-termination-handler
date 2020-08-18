@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "k3s-node-termination-handler.fullname" . }}
+  labels:
+    {{- include "k3s-node-termination-handler.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "k3s-node-termination-handler.selectorLabels" . | nindent 6 }}
+{{- with .Values.strategy }}
+  strategy:
+    {{- toYaml . | nindent 4 }}
+{{- end }}
+  template:
+    metadata:
+      labels:
+        name: {{ include "k3s-node-termination-handler.fullname" . }}
+        {{- include "k3s-node-termination-handler.selectorLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "k3s-node-termination-handler.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Chart.AppVersion }}"
+          args:
+{{- if .Values.verboseLogging }}
+            - --zap-level 1
+{{- end }}
+            - -g
+            - {{ .Values.nodeTerminationGracePeriod }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+            - name: http-metrics
+              containerPort: 8383
+              protocol: TCP
+            - name: cr-metrics
+              containerPort: 8686
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http
+{{- if .Values.awsCredentials.create }}
+          envFrom:
+          - secretRef:
+              name: {{ include "k3s-node-termination-handler.credentialsSecretName" . }}
+{{- end }}
+          env:
+          - name: AWS_REGION
+            value: {{ required "A valid AWS region is required. Please set .Values.awsCredentials.awsRegion" .Values.awsCredentials.awsRegion }}
+          - name: SERVICE_MONITOR_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: OPERATOR_NAME
+            value: {{ include "k3s-node-termination-handler.fullname" . }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}

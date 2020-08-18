@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: k3s-node-termination-handler
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: k3s-node-termination-handler
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        name: k3s-node-termination-handler
+    spec:
+      serviceAccountName: k3s-node-termination-handler
+      containers:
+        - name: k3s-node-termination-handler
+          # Replace this with the built image name
+          image: quay.io/givanov/k3s-node-termination-handler:v1.0.0
+          command:
+          - k3s-node-termination-handler
+          args:
+            - g
+            - 5m
+          imagePullPolicy: IfNotExists
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+            - name: http-metrics
+              containerPort: 8383
+              protocol: TCP
+            - name: cr-metrics
+              containerPort: 8686
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http
+          env:
+            - name: AWS_REGION
+              value: "us-east-1"
+            - name: SERVICE_MONITOR_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: OPERATOR_NAME
+              value: "k3s-node-termination-handler"
