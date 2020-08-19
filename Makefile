@@ -215,42 +215,11 @@ update-npm-dependencies: install-npm-check-updates
 	ncu -u
 	npm install
 
-DOCKER_ARCHS ?= amd64 arm arm64 ppc64le s390x
+DOCKER_PLATFORMS ?= linux/arm,linux/arm64,linux/amd64,linux/ppc64le,linux/s390x
 DOCKER_IMAGE_TAG ?= $(VERSION)
 DOCKERFILE_PATH = build/Dockerfile
 DOCKERBUILD_CONTEXT = .
 
-BUILD_DOCKER_ARCHS = $(addprefix common-docker-,$(DOCKER_ARCHS))
-PUBLISH_DOCKER_ARCHS = $(addprefix common-docker-publish-,$(DOCKER_ARCHS))
-TAG_DOCKER_ARCHS = $(addprefix common-docker-tag-latest-,$(DOCKER_ARCHS))
-MANIFEST_AMMEND_ARCHS = $(addprefix common-docker-manifest-set-arch-,$(DOCKER_ARCHS))
-
-.PHONY: common-docker $(BUILD_DOCKER_ARCHS)
-common-docker: $(BUILD_DOCKER_ARCHS)
-$(BUILD_DOCKER_ARCHS): common-docker-%:
-	docker build -t "$(DOCKER_REPO)/$(DOCKER_IMAGE_NAME)-linux-$*:$(DOCKER_IMAGE_TAG)" \
-		-f $(DOCKERFILE_PATH) \
-		--build-arg ARCH="$*" \
-		--build-arg OS="linux" \
-		$(DOCKERBUILD_CONTEXT)
-
-.PHONY: common-docker-publish $(PUBLISH_DOCKER_ARCHS)
-common-docker-publish: $(PUBLISH_DOCKER_ARCHS)
-$(PUBLISH_DOCKER_ARCHS): common-docker-publish-%:
-	docker push "$(DOCKER_REPO)/$(DOCKER_IMAGE_NAME)-linux-$*:$(DOCKER_IMAGE_TAG)"
-
-.PHONY: common-docker-tag-latest $(TAG_DOCKER_ARCHS)
-common-docker-tag-latest: $(TAG_DOCKER_ARCHS)
-$(TAG_DOCKER_ARCHS): common-docker-tag-latest-%:
-	docker tag "$(DOCKER_REPO)/$(DOCKER_IMAGE_NAME)-linux-$*:$(DOCKER_IMAGE_TAG)" "$(DOCKER_REPO)/$(DOCKER_IMAGE_NAME)-linux-$*:latest"
-
-.PHONY: common-docker-manifest
-common-docker-manifest:
-	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create -a "$(DOCKER_REPO)/$(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG)" $(foreach ARCH,$(DOCKER_ARCHS),$(DOCKER_REPO)/$(DOCKER_IMAGE_NAME)-linux-$(ARCH):$(DOCKER_IMAGE_TAG))
-	$(MAKE) common-docker-manifest-set-arch
-	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push "$(DOCKER_REPO)/$(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG)"
-
-.PHONY: common-docker-manifest-set-arch $(MANIFEST_AMMEND_ARCHS)
-common-docker-manifest-set-arch: $(MANIFEST_AMMEND_ARCHS)
-$(MANIFEST_AMMEND_ARCHS): common-docker-manifest-set-arch-%:
-	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest annotate --arch $* "$(DOCKER_REPO)/$(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG)" "$(DOCKER_REPO)/$(DOCKER_IMAGE_NAME)-linux-$*:$(DOCKER_IMAGE_TAG)"
+.PHONY: docker-image-build-push
+docker-image-build-push:
+	DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build -f $(DOCKERFILE_PATH) -t $(DOCKER_REPO)/$(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG) --platform=$(DOCKER_PLATFORMS) . --push

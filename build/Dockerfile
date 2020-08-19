@@ -12,13 +12,12 @@ COPY Makefile .
 RUN make setup
 
 COPY . /operator
+ARG TARGETOS
+ARG TARGETARCH
 
-ARG OS
-ARG ARCH
+RUN GOOS=${TARGETOS} GOARCH=${TARGETARCH} GOARM=7 make build-docker
 
-RUN GOOS=${OS} GOARCH=${ARCH} GOARM=7 make build-docker
-
-FROM registry.access.redhat.com/ubi8/ubi-minimal:latest
+FROM alpine:3.11.5
 
 ENV OPERATOR=/usr/local/bin/operator \
     USER_UID=1001 \
