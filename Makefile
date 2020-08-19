@@ -193,6 +193,10 @@ helm-package: helm-clean
 helm-lint:
 	helm lint $(CHART_PATH)/$(CHART_NAME)
 
+.PHONY: export-tag-github-actions
+export-tag-github-actions:
+	@echo ::set-output name=output_msg::$(VERSION)
+
 .PHONY: semantic-release
 semantic-release:
 	@npm ci

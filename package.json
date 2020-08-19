@@ -50,7 +50,7 @@
       [
         "@semantic-release/exec",
         {
-          "prepareCmd": "make helm-package VERSION=v${nextRelease.version}"
+          "prepareCmd": "make helm-package export-tag-github-actions VERSION=v${nextRelease.version}"
         }
       ],
       [

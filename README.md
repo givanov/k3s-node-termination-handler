@@ -29,3 +29,7 @@ helm upgrade --install k3s-node-termination-handler https://github.com/givanov/k
     --set nodeTerminationGracePeriod=5m
 ```
 Where ${VERSION} is the version you want to install
+
+
+helm upgrade --install k3s-node-termination-handler https://github.com/givanov/k3s-node-termination-handler/releases/download/v1.0.0/k3s-node-termination-handler-v1.0.0.tgz -n k3s-node-termination-handler \
+    --set nodeTerminationGracePeriod=5m
