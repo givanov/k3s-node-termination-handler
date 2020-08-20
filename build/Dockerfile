@@ -17,7 +17,7 @@ ARG TARGETARCH
 
 RUN GOOS=${TARGETOS} GOARCH=${TARGETARCH} GOARM=7 make build-docker
 
-FROM alpine:3.11.5
+FROM alpine:3.12.0
 
 ENV OPERATOR=/usr/local/bin/operator \
     USER_UID=1001 \

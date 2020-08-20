@@ -21,7 +21,7 @@ spec:
       containers:
         - name: k3s-node-termination-handler
           # Replace this with the built image name
-          image: quay.io/givanov/k3s-node-termination-handler:v1.0.0
+          image: quay.io/givanov/k3s-node-termination-handler:v1.0.1
           command:
           - k3s-node-termination-handler
           args:
